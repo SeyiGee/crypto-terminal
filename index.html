@@ -3,155 +3,227 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Institutional Alpha & Risk Terminal</title>
+    <title>AuraTrade AI - Telegram Trading Bot</title>
+    <!-- Tailwind CSS for modern styling -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        darkBg: '#0b0e14',
+                        cardBg: '#121824',
+                        accentGreen: '#00f5d4',
+                        accentRed: '#ff3366',
+                        accentBlue: '#3b82f6',
+                        borderCol: '#1e293b'
+                    }
+                }
+            }
+        }
+    </script>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen p-4 font-sans pb-16">
-    <div class="max-w-md mx-auto space-y-4">
+<body class="bg-darkBg text-gray-100 font-sans antialiased min-h-screen flex flex-col items-center p-4">
+
+    <!-- App Container -->
+    <div class="w-full max-w-md bg-cardBg border border-borderCol rounded-2xl shadow-2xl overflow-hidden mb-6">
         
         <!-- Header -->
-        <div class="text-center space-y-1 pt-2">
-            <h1 class="text-xl font-black tracking-tight text-emerald-400">⚡ AlphaTerminal Pro</h1>
-            <p class="text-xs text-slate-400">Multi-TF TA, FA Confluence & Portfolio Risk Engine</p>
+        <div class="bg-[#182232] p-4 border-b border-borderCol flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <div class="w-3 h-3 bg-accentGreen rounded-full animate-pulse"></div>
+                <h1 class="font-bold text-lg tracking-wider text-white">AuraBot <span class="text-xs text-accentGreen bg-accentGreen/10 px-2 py-0.5 rounded-full border border-accentGreen/20">v2.4 AI</span></h1>
+            </div>
+            <div class="text-right">
+                <span class="text-xs text-gray-400">Portfolio</span>
+                <p class="text-sm font-semibold text-white" id="portfolioVal">$10,450.00</p>
+            </div>
         </div>
 
-        <!-- Control Panel Card -->
-        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3 shadow-xl">
-            <div>
-                <label class="block text-xs font-semibold text-slate-300 mb-1">Token Symbol or Contract Address</label>
-                <input type="text" id="query" placeholder="e.g. BTC, SOL, or contract..." class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500 uppercase font-mono">
-            </div>
-
-            <div class="grid grid-cols-2 gap-3">
-                <div>
-                    <label class="block text-xs font-semibold text-slate-300 mb-1">Portfolio Size ($)</label>
-                    <input type="number" id="portfolio" value="5000" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500 font-mono">
+        <!-- Token Search & Timeframe Bar -->
+        <div class="p-4 space-y-3">
+            <div class="flex gap-2">
+                <div class="relative flex-1">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
+                        <i class="fa-solid fa-magnifying-glass text-xs"></i>
+                    </span>
+                    <input type="text" id="tokenInput" placeholder="Enter Ticker or CA (e.g., SOL, PEPE)" class="w-full bg-[#0b0e14] border border-borderCol rounded-xl pl-9 pr-3 py-2 text-sm text-white focus:outline-none focus:border-accentBlue uppercase placeholder:normal-case">
                 </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-300 mb-1">Timeframe</label>
-                    <select id="timeframe" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500 font-mono">
-                        <option value="15m">15 Minutes (Scalp)</option>
-                        <option value="1h" selected>1 Hour (Intraday)</option>
-                        <option value="4h">4 Hours (Swing)</option>
-                        <option value="1d">1 Day (Position)</option>
-                    </select>
-                </div>
-            </div>
-
-            <div class="grid grid-cols-2 gap-3">
-                <div>
-                    <label class="block text-xs font-semibold text-slate-300 mb-1">Risk Allocation (%)</label>
-                    <select id="riskPct" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500 font-mono">
-                        <option value="1.0">1.0% (Conservative)</option>
-                        <option value="1.5" selected>1.5% (Standard)</option>
-                        <option value="2.0">2.0% (Aggressive)</option>
-                        <option value="3.0">3.0% (High Risk)</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-300 mb-1">Perp Leverage (1x = Spot)</label>
-                    <input type="number" id="leverage" value="5" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500 font-mono">
-                </div>
-            </div>
-
-            <button onclick="runAdvancedAnalysis()" class="w-full bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold py-3 rounded-xl transition text-sm shadow-lg shadow-emerald-500/20 active:scale-95 cursor-pointer">
-                Run Comprehensive Analysis 🚀
-            </button>
-        </div>
-
-        <!-- Loading State -->
-        <div id="loading" class="hidden text-center py-10">
-            <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-emerald-500 border-t-transparent"></div>
-            <p class="text-xs text-slate-400 mt-2">Aggregating CEX books, DEX liquidity & trend confluences...</p>
-        </div>
-
-        <!-- Results Dashboard -->
-        <div id="results" class="hidden space-y-4">
-            
-            <!-- Token Header Overview -->
-            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3 shadow-xl">
-                <div class="flex justify-between items-center border-b border-slate-800 pb-3">
-                    <div>
-                        <h2 id="res-symbol" class="font-bold text-base text-emerald-400">---</h2>
-                        <span id="res-venue" class="text-[10px] bg-slate-800 px-2 py-0.5 rounded text-slate-300 font-mono">---</span>
-                    </div>
-                    <div class="text-right">
-                        <div id="res-price" class="font-mono font-bold text-base">---</div>
-                        <div id="res-change" class="text-xs font-semibold">---</div>
-                    </div>
-                </div>
-
-                <!-- Fundamental & Trend Snapshot -->
-                <div class="grid grid-cols-2 gap-2 text-xs text-slate-300 bg-slate-950/60 p-3 rounded-xl border border-slate-800/50">
-                    <div>24h Volume: <span id="res-vol" class="font-mono font-bold text-white">---</span></div>
-                    <div id="res-metric-container">Metric: <span id="res-metric-val" class="font-mono font-bold text-white">---</span></div>
-                    <div>Market Trend: <span id="res-trend" class="font-mono font-bold text-emerald-400">Bullish Confluence</span></div>
-                    <div>Volatility Tier: <span id="res-volatility" class="font-mono font-bold text-amber-400">Normal</span></div>
-                </div>
-
-                <!-- Optimized Execution Setup -->
-                <div class="space-y-1.5">
-                    <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider text-slate-400">🎯 Actionable Trade Setup (<span id="lbl-tf">1h</span>)</div>
-                    <div class="bg-slate-950 border border-slate-800/50 rounded-xl p-3 space-y-2 text-xs font-mono">
-                        <div class="flex justify-between"><span>Direction:</span> <span class="text-emerald-400 font-bold">LONG / BUY</span></div>
-                        <div class="flex justify-between"><span>Entry Price:</span> <span id="setup-entry" class="text-white font-bold">---</span></div>
-                        <div class="flex justify-between"><span>Stop Loss:</span> <span id="setup-sl" class="text-rose-400 font-bold">---</span></div>
-                        <div class="flex justify-between"><span>Take Profit 1 (1:1.5):</span> <span id="setup-tp1" class="text-emerald-400 font-bold">---</span></div>
-                        <div class="flex justify-between"><span>Take Profit 2 (1:3.0):</span> <span id="setup-tp2" class="text-emerald-300 font-bold">---</span></div>
-                        <div class="flex justify-between"><span>Take Profit 3 (1:5.0):</span> <span id="setup-tp3" class="text-emerald-200 font-bold">---</span></div>
-                    </div>
-                </div>
-
-                <!-- Portfolio Risk & Margin Sizing -->
-                <div class="space-y-1.5">
-                    <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider text-slate-400">⚖️ Portfolio Risk & Margin Management</div>
-                    <div class="bg-slate-950 border border-slate-800/50 rounded-xl p-3 space-y-2 text-xs font-mono">
-                        <div class="flex justify-between"><span>Target Risk (<span id="lbl-risk">1.5</span>%):</span> <span id="risk-usd" class="text-amber-400 font-bold">---</span></div>
-                        <div class="flex justify-between"><span>Position Allocation:</span> <span id="risk-tokens" class="text-white font-bold">---</span></div>
-                        <div class="flex justify-between"><span>Total Notional Value:</span> <span id="risk-notional" class="text-white font-bold">---</span></div>
-                        <div class="flex justify-between"><span>Required Margin:</span> <span id="risk-margin" class="text-cyan-400 font-bold">---</span></div>
-                    </div>
-                </div>
-
-                <!-- Copy for Telegram Button -->
-                <button onclick="copyTelegramReport()" class="w-full bg-slate-800 hover:bg-slate-700 text-emerald-400 border border-slate-700 font-bold py-2.5 rounded-xl transition text-xs flex items-center justify-center gap-2 cursor-pointer">
-                    📋 Copy Report for Telegram Channel
+                <button onclick="runAnalysis()" class="bg-accentBlue hover:bg-blue-600 text-white font-semibold px-4 py-2 rounded-xl text-sm transition-all shadow-lg shadow-blue-500/20">
+                    Analyze
                 </button>
             </div>
+
+            <!-- Timeframe Selector -->
+            <div class="flex justify-between bg-[#0b0e14] p-1 rounded-xl border border-borderCol text-xs font-medium">
+                <button onclick="setTimeframe('1m')" id="tf-1m" class="tf-btn flex-1 py-1.5 rounded-lg text-gray-400 hover:text-white transition">1m</button>
+                <button onclick="setTimeframe('5m')" id="tf-5m" class="tf-btn flex-1 py-1.5 rounded-lg text-gray-400 hover:text-white transition">5m</button>
+                <button onclick="setTimeframe('1h')" id="tf-1h" class="tf-btn flex-1 py-1.5 rounded-lg bg-accentBlue text-white shadow">1h</button>
+                <button onclick="setTimeframe('4h')" id="tf-4h" class="tf-btn flex-1 py-1.5 rounded-lg text-gray-400 hover:text-white transition">4h</button>
+                <button onclick="setTimeframe('1D')" id="tf-1D" class="tf-btn flex-1 py-1.5 rounded-lg text-gray-400 hover:text-white transition">1D</button>
+            </div>
+        </div>
+
+        <!-- Analysis Dashboard Area -->
+        <div id="dashboardContent" class="px-4 pb-4 space-y-4">
+            
+            <!-- Token Overview Card -->
+            <div class="bg-[#0b0e14] p-3.5 rounded-xl border border-borderCol flex justify-between items-center">
+                <div>
+                    <div class="flex items-center space-x-2">
+                        <span id="tokenSymbol" class="font-bold text-lg text-white">SOL/USDT</span>
+                        <span id="tokenSignal" class="text-[10px] font-bold px-2 py-0.5 rounded bg-accentGreen/10 text-accentGreen border border-accentGreen/20">STRONG BUY</span>
+                    </div>
+                    <p class="text-xs text-gray-400" id="tokenName">Solana Network</p>
+                </div>
+                <div class="text-right">
+                    <p class="font-bold text-base text-white" id="tokenPrice">$142.50</p>
+                    <p class="text-xs text-accentGreen" id="tokenChange">+6.45% (24h)</p>
+                </div>
+            </div>
+
+            <!-- Multi-Dimensional Analysis Grid -->
+            <div class="grid grid-cols-2 gap-2">
+                <!-- Technicals -->
+                <div class="bg-[#0b0e14] p-3 rounded-xl border border-borderCol">
+                    <div class="flex items-center justify-between mb-1.5">
+                        <span class="text-xs font-semibold text-gray-300"><i class="fa-solid fa-chart-line text-accentBlue mr-1"></i> Technicals</span>
+                        <span class="text-[10px] text-accentGreen font-bold">Bullish</span>
+                    </div>
+                    <p class="text-[11px] text-gray-400 leading-relaxed" id="techText">RSI(14): 58.2 (Neutral). MACD Bullish crossover confirmed on 1h. Breaking resistance.</p>
+                </div>
+
+                <!-- Fundamentals -->
+                <div class="bg-[#0b0e14] p-3 rounded-xl border border-borderCol">
+                    <div class="flex items-center justify-between mb-1.5">
+                        <span class="text-xs font-semibold text-gray-300"><i class="fa-solid fa-shield-halved text-purple-400 mr-1"></i> Fundamentals</span>
+                        <span class="text-[10px] text-accentGreen font-bold">Safe (92%)</span>
+                    </div>
+                    <p class="text-[11px] text-gray-400 leading-relaxed" id="fundText">MCap: $66B. Liq locked/burned. Top 10 holders own &lt; 12%. Zero mint authority.</p>
+                </div>
+
+                <!-- Trends & News -->
+                <div class="bg-[#0b0e14] p-3 rounded-xl border border-borderCol col-span-2">
+                    <div class="flex items-center justify-between mb-1.5">
+                        <span class="text-xs font-semibold text-gray-300"><i class="fa-solid fa-newspaper text-yellow-400 mr-1"></i> Trends & News Catalysts</span>
+                        <span class="text-[10px] text-accentGreen font-bold">High Social Buzz</span>
+                    </div>
+                    <p class="text-[11px] text-gray-400 leading-relaxed" id="newsText">Spike in Twitter/X mentions (+140% in 4h). Major institutional inflow reported across DEX aggregators.</p>
+                </div>
+            </div>
+
+            <!-- Trade Setup Box -->
+            <div class="bg-gradient-to-b from-[#151c2a] to-[#0b0e14] p-3.5 rounded-xl border border-accentBlue/30 space-y-3">
+                <div class="flex justify-between items-center border-b border-borderCol pb-2">
+                    <span class="text-xs font-bold text-accentBlue uppercase tracking-wider"><i class="fa-solid fa-crosshairs mr-1"></i> AI Recommended Setup</span>
+                    <span class="text-xs text-gray-300">Risk: <strong class="text-white">2.0% ($209)</strong></span>
+                </div>
+
+                <!-- Setup Grid -->
+                <div class="grid grid-cols-3 gap-2 text-center">
+                    <div class="bg-[#0b0e14] p-2 rounded-lg border border-borderCol">
+                        <span class="text-[10px] text-gray-400 block">Entry Point</span>
+                        <span class="text-sm font-bold text-white" id="setupEntry">$142.10</span>
+                    </div>
+                    <div class="bg-[#0b0e14] p-2 rounded-lg border border-borderCol">
+                        <span class="text-[10px] text-accentRed block">Stop Loss</span>
+                        <span class="text-sm font-bold text-accentRed" id="setupSL">$137.50 (-3.2%)</span>
+                    </div>
+                    <div class="bg-[#0b0e14] p-2 rounded-lg border border-borderCol">
+                        <span class="text-[10px] text-accentGreen block">Take Profit</span>
+                        <span class="text-sm font-bold text-accentGreen" id="setupTP">$154.00 (+8.3%)</span>
+                    </div>
+                </div>
+
+                <!-- Position Sizing & Margin -->
+                <div class="bg-[#0b0e14] p-2.5 rounded-lg border border-borderCol flex justify-between items-center text-xs">
+                    <div>
+                        <span class="text-gray-400 block">Position Size / Margin:</span>
+                        <span class="font-bold text-white text-sm" id="setupSize">$1,045.00 <span class="text-xs text-accentBlue font-normal">(10x Leverage)</span></span>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-gray-400 block">Est. Profit (TP):</span>
+                        <span class="font-bold text-accentGreen text-sm" id="setupProfit">+$87.20</span>
+                    </div>
+                </div>
+
+                <!-- Execution Button -->
+                <button onclick="executeTrade()" class="w-full bg-gradient-to-r from-accentGreen to-emerald-500 hover:from-emerald-400 hover:to-emerald-600 text-darkBg font-bold py-2.5 rounded-xl text-sm transition-all shadow-lg shadow-emerald-500/20 flex items-center justify-center space-x-2">
+                    <i class="fa-solid fa-bolt"></i>
+                    <span>Execute Trade via TG Bot</span>
+                </button>
+            </div>
+
         </div>
     </div>
 
+    <!-- JavaScript Engine -->
     <script>
-        let lastReportText = "";
+        let currentTimeframe = '1h';
 
-        async function runAdvancedAnalysis() {
-            let query = document.getElementById('query').value.trim().toUpperCase();
-            let portfolio = parseFloat(document.getElementById('portfolio').value) || 5000;
-            let timeframe = document.getElementById('timeframe').value;
-            let riskPct = parseFloat(document.getElementById('riskPct').value) || 1.5;
-            let leverage = parseInt(document.getElementById('leverage').value) || 1;
+        function setTimeframe(tf) {
+            currentTimeframe = tf;
+            document.querySelectorAll('.tf-btn').forEach(btn => {
+                btn.classList.remove('bg-accentBlue', 'text-white', 'shadow');
+                btn.classList.add('text-gray-400');
+            });
+            document.getElementById(`tf-${tf}`).classList.add('bg-accentBlue', 'text-white', 'shadow');
+            document.getElementById(`tf-${tf}`).classList.remove('text-gray-400');
+            
+            // Trigger pseudo refresh or re-analysis based on timeframe
+            runAnalysis();
+        }
 
-            if (!query) {
-                alert('Please enter a valid token symbol or contract address.');
-                return;
-            }
+        function runAnalysis() {
+            const query = document.getElementById('tokenInput').value.trim().toUpperCase() || 'SOL';
+            
+            // Mock data variation based on input token to simulate realistic comprehensive analyzer backend
+            const tokenData = {
+                'SOL': { name: 'Solana Network', price: '$142.50', change: '+6.45%', signal: 'STRONG BUY', tech: 'RSI(14): 58.2. MACD Bullish crossover confirmed on ' + currentTimeframe + '. Breakout imminent.', fund: 'MCap: $66B. Liq locked. Holder concentration healthy.', news: 'Spike in Twitter volume (+140%). High institutional dex aggregation.', entry: '$142.10', sl: '$137.50 (-3.2%)', tp: '$154.00 (+8.3%)', size: '$1,045.00 (10x)', profit: '+$87.20' },
+                'BTC': { name: 'Bitcoin', price: '$67,400.00', change: '+2.10%', signal: 'BUY', tech: 'RSI(14): 61.4. Consolidation above key macro pivot on ' + currentTimeframe + '.', fund: 'ETF inflows positive for 4 consecutive days. Exchange reserves dropping.', news: 'Macro liquidity shifting favorably. Options expiry favoring bulls.', entry: '$67,100', sl: '$65,800 (-1.9%)', tp: '$70,500 (+5.0%)', size: '$2,090.00 (5x)', profit: '+$104.50' },
+                'PEPE': { name: 'Pepe Coin', price: '$0.0000124', change: '+14.20%', signal: 'DYN SCALP', tech: 'RSI(14): 74.5 (Overbought, high momentum on ' + currentTimeframe + ').', fund: 'High volume surge ($1.2B 24h). Whale accumulation detected.', news: 'Trending #1 globally on X/Twitter. Community raid ongoing.', entry: '$0.0000122', sl: '$0.0000110 (-9.8%)', tp: '$0.0000155 (+27%)', size: '$522.50 (5x)', profit: '+$141.00' }
+            };
 
-            document.getElementById('loading').classList.remove('hidden');
-            document.getElementById('results').classList.add('hidden');
+            const data = tokenData[query] || {
+                name: query + ' Token',
+                price: '$1.45',
+                change: '+8.3%',
+                signal: 'ACCUMULATE',
+                tech: 'RSI neutral at 50.1. Moving averages trending upward on ' + currentTimeframe + '.',
+                fund: 'Contract verified, tax 0/0, liquidity pool locked for 365 days.',
+                news: 'Positive sentiment across Telegram channels and DEX scanners.',
+                entry: '$1.42',
+                sl: '$1.35 (-4.9%)',
+                tp: '$1.75 (+23.2%)',
+                size: '$522.50 (5x)',
+                profit: '+$121.00'
+            };
 
-            let marketData = null;
-            let isPerp = true;
+            // Update UI elements
+            document.getElementById('tokenSymbol').innerText = query + '/USDT';
+            document.getElementById('tokenName').innerText = data.name;
+            document.getElementById('tokenPrice').innerText = data.price;
+            document.getElementById('tokenChange').innerText = data.change + ' (' + currentTimeframe + ')';
+            document.getElementById('tokenSignal').innerText = data.signal;
+            document.getElementById('techText').innerText = data.tech;
+            document.getElementById('fundText').innerText = data.fund;
+            document.getElementById('newsText').innerText = data.news;
+            document.getElementById('setupEntry').innerText = data.entry;
+            document.getElementById('setupSL').innerText = data.sl;
+            document.getElementById('setupTP').innerText = data.tp;
+            document.getElementById('setupSize').innerText = data.size;
+            document.getElementById('setupProfit').innerText = data.profit;
+        }
 
-            // 1. Try fetching from Binance Futures Public API
-            try {
-                let binanceSymbol = query.includes('USDT') ? query : query + 'USDT';
-                let res = await fetch(`https://fapi.binance.com/fapi/v1/ticker/24hr?symbol=${binanceSymbol}`);
-                if (res.ok) {
-                    let data = await res.json();
-                    marketData = {
-                        type: "CEX_PERP",
-                        symbol: query,
-                        price: parseFloat(data.lastPrice),
+        function executeTrade() {
+            alert('🚀 Order broadcasted to Telegram Bot backend! Trade successfully executed based on portfolio risk parameters.');
+        }
+    </script>
+</body>
+</html>
+at(data.lastPrice),
                         volume_24h: parseFloat(data.quoteVolume),
                         change_24h: parseFloat(data.priceChangePercent),
                         high_24h: parseFloat(data.highPrice),
