@@ -1,390 +1,75 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AuraTrade AI - Telegram Trading Bot</title>
-    <!-- Tailwind CSS for modern styling -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- FontAwesome for Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        darkBg: '#0b0e14',
-                        cardBg: '#121824',
-                        accentGreen: '#00f5d4',
-                        accentRed: '#ff3366',
-                        accentBlue: '#3b82f6',
-                        borderCol: '#1e293b'
-                    }
-                }
-            }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CryptoVibe Analyzer — Multi-TF Trade Setups</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="https://unpkg.com/ta.js@latest/ta.iife.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'], mono: ['JetBrains Mono', 'monospace'] },
+          colors: {
+            vibe: { 50: '#f0fdf9', 100: '#ccfbf1', 200: '#99f6e4', 300: '#5eead4', 400: '#2dd4bf', 500: '#14b8a6', 600: '#0d9488', 700: '#0f766e', 800: '#115e59', 900: '#134e4a' }
+          }
         }
-    </script>
+      }
+    }
+  </script>
+  <style>
+    body { background: #0a0e17; }
+    .glass { background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(45, 212, 191, 0.12); }
+    .glow { box-shadow: 0 0 40px rgba(20, 184, 166, 0.15); }
+    .input-glow:focus { box-shadow: 0 0 0 2px rgba(45, 212, 191, 0.4); }
+    .badge-long { background: linear-gradient(135deg, #059669, #10b981); }
+    .badge-short { background: linear-gradient(135deg, #dc2626, #ef4444); }
+    .badge-neutral { background: linear-gradient(135deg, #64748b, #94a3b8); }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #0f172a; }
+    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+    .skeleton { background: linear-gradient(90deg, #1e293b 25%, #334155 50%, #1e293b 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; }
+    @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+  </style>
 </head>
-<body class="bg-darkBg text-gray-100 font-sans antialiased min-h-screen flex flex-col items-center p-4">
-
-    <!-- App Container -->
-    <div class="w-full max-w-md bg-cardBg border border-borderCol rounded-2xl shadow-2xl overflow-hidden mb-6">
-        
-        <!-- Header -->
-        <div class="bg-[#182232] p-4 border-b border-borderCol flex justify-between items-center">
-            <div class="flex items-center space-x-2">
-                <div class="w-3 h-3 bg-accentGreen rounded-full animate-pulse"></div>
-                <h1 class="font-bold text-lg tracking-wider text-white">AuraBot <span class="text-xs text-accentGreen bg-accentGreen/10 px-2 py-0.5 rounded-full border border-accentGreen/20">v2.4 AI</span></h1>
-            </div>
-            <div class="text-right">
-                <span class="text-xs text-gray-400">Portfolio</span>
-                <p class="text-sm font-semibold text-white" id="portfolioVal">$10,450.00</p>
-            </div>
+<body class="font-sans text-slate-200 min-h-screen">
+  <!-- Header -->
+  <header class="sticky top-0 z-50 border-b border-slate-800/80 bg-[#0a0e17]/90 backdrop-blur-md">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-vibe-400 to-vibe-600 flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-vibe-500/30">⚡</div>
+        <div>
+          <h1 class="text-lg font-bold tracking-tight text-white">CryptoVibe Analyzer</h1>
+          <p class="text-[11px] text-slate-400 -mt-0.5">Multi-TF • Fundamentals • Position Sizing</p>
         </div>
-
-        <!-- Token Search & Timeframe Bar -->
-        <div class="p-4 space-y-3">
-            <div class="flex gap-2">
-                <div class="relative flex-1">
-                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
-                        <i class="fa-solid fa-magnifying-glass text-xs"></i>
-                    </span>
-                    <input type="text" id="tokenInput" placeholder="Enter Ticker or CA (e.g., SOL, PEPE)" class="w-full bg-[#0b0e14] border border-borderCol rounded-xl pl-9 pr-3 py-2 text-sm text-white focus:outline-none focus:border-accentBlue uppercase placeholder:normal-case">
-                </div>
-                <button onclick="runAnalysis()" class="bg-accentBlue hover:bg-blue-600 text-white font-semibold px-4 py-2 rounded-xl text-sm transition-all shadow-lg shadow-blue-500/20">
-                    Analyze
-                </button>
-            </div>
-
-            <!-- Timeframe Selector -->
-            <div class="flex justify-between bg-[#0b0e14] p-1 rounded-xl border border-borderCol text-xs font-medium">
-                <button onclick="setTimeframe('1m')" id="tf-1m" class="tf-btn flex-1 py-1.5 rounded-lg text-gray-400 hover:text-white transition">1m</button>
-                <button onclick="setTimeframe('5m')" id="tf-5m" class="tf-btn flex-1 py-1.5 rounded-lg text-gray-400 hover:text-white transition">5m</button>
-                <button onclick="setTimeframe('1h')" id="tf-1h" class="tf-btn flex-1 py-1.5 rounded-lg bg-accentBlue text-white shadow">1h</button>
-                <button onclick="setTimeframe('4h')" id="tf-4h" class="tf-btn flex-1 py-1.5 rounded-lg text-gray-400 hover:text-white transition">4h</button>
-                <button onclick="setTimeframe('1D')" id="tf-1D" class="tf-btn flex-1 py-1.5 rounded-lg text-gray-400 hover:text-white transition">1D</button>
-            </div>
-        </div>
-
-        <!-- Analysis Dashboard Area -->
-        <div id="dashboardContent" class="px-4 pb-4 space-y-4">
-            
-            <!-- Token Overview Card -->
-            <div class="bg-[#0b0e14] p-3.5 rounded-xl border border-borderCol flex justify-between items-center">
-                <div>
-                    <div class="flex items-center space-x-2">
-                        <span id="tokenSymbol" class="font-bold text-lg text-white">SOL/USDT</span>
-                        <span id="tokenSignal" class="text-[10px] font-bold px-2 py-0.5 rounded bg-accentGreen/10 text-accentGreen border border-accentGreen/20">STRONG BUY</span>
-                    </div>
-                    <p class="text-xs text-gray-400" id="tokenName">Solana Network</p>
-                </div>
-                <div class="text-right">
-                    <p class="font-bold text-base text-white" id="tokenPrice">$142.50</p>
-                    <p class="text-xs text-accentGreen" id="tokenChange">+6.45% (24h)</p>
-                </div>
-            </div>
-
-            <!-- Multi-Dimensional Analysis Grid -->
-            <div class="grid grid-cols-2 gap-2">
-                <!-- Technicals -->
-                <div class="bg-[#0b0e14] p-3 rounded-xl border border-borderCol">
-                    <div class="flex items-center justify-between mb-1.5">
-                        <span class="text-xs font-semibold text-gray-300"><i class="fa-solid fa-chart-line text-accentBlue mr-1"></i> Technicals</span>
-                        <span class="text-[10px] text-accentGreen font-bold">Bullish</span>
-                    </div>
-                    <p class="text-[11px] text-gray-400 leading-relaxed" id="techText">RSI(14): 58.2 (Neutral). MACD Bullish crossover confirmed on 1h. Breaking resistance.</p>
-                </div>
-
-                <!-- Fundamentals -->
-                <div class="bg-[#0b0e14] p-3 rounded-xl border border-borderCol">
-                    <div class="flex items-center justify-between mb-1.5">
-                        <span class="text-xs font-semibold text-gray-300"><i class="fa-solid fa-shield-halved text-purple-400 mr-1"></i> Fundamentals</span>
-                        <span class="text-[10px] text-accentGreen font-bold">Safe (92%)</span>
-                    </div>
-                    <p class="text-[11px] text-gray-400 leading-relaxed" id="fundText">MCap: $66B. Liq locked/burned. Top 10 holders own &lt; 12%. Zero mint authority.</p>
-                </div>
-
-                <!-- Trends & News -->
-                <div class="bg-[#0b0e14] p-3 rounded-xl border border-borderCol col-span-2">
-                    <div class="flex items-center justify-between mb-1.5">
-                        <span class="text-xs font-semibold text-gray-300"><i class="fa-solid fa-newspaper text-yellow-400 mr-1"></i> Trends & News Catalysts</span>
-                        <span class="text-[10px] text-accentGreen font-bold">High Social Buzz</span>
-                    </div>
-                    <p class="text-[11px] text-gray-400 leading-relaxed" id="newsText">Spike in Twitter/X mentions (+140% in 4h). Major institutional inflow reported across DEX aggregators.</p>
-                </div>
-            </div>
-
-            <!-- Trade Setup Box -->
-            <div class="bg-gradient-to-b from-[#151c2a] to-[#0b0e14] p-3.5 rounded-xl border border-accentBlue/30 space-y-3">
-                <div class="flex justify-between items-center border-b border-borderCol pb-2">
-                    <span class="text-xs font-bold text-accentBlue uppercase tracking-wider"><i class="fa-solid fa-crosshairs mr-1"></i> AI Recommended Setup</span>
-                    <span class="text-xs text-gray-300">Risk: <strong class="text-white">2.0% ($209)</strong></span>
-                </div>
-
-                <!-- Setup Grid -->
-                <div class="grid grid-cols-3 gap-2 text-center">
-                    <div class="bg-[#0b0e14] p-2 rounded-lg border border-borderCol">
-                        <span class="text-[10px] text-gray-400 block">Entry Point</span>
-                        <span class="text-sm font-bold text-white" id="setupEntry">$142.10</span>
-                    </div>
-                    <div class="bg-[#0b0e14] p-2 rounded-lg border border-borderCol">
-                        <span class="text-[10px] text-accentRed block">Stop Loss</span>
-                        <span class="text-sm font-bold text-accentRed" id="setupSL">$137.50 (-3.2%)</span>
-                    </div>
-                    <div class="bg-[#0b0e14] p-2 rounded-lg border border-borderCol">
-                        <span class="text-[10px] text-accentGreen block">Take Profit</span>
-                        <span class="text-sm font-bold text-accentGreen" id="setupTP">$154.00 (+8.3%)</span>
-                    </div>
-                </div>
-
-                <!-- Position Sizing & Margin -->
-                <div class="bg-[#0b0e14] p-2.5 rounded-lg border border-borderCol flex justify-between items-center text-xs">
-                    <div>
-                        <span class="text-gray-400 block">Position Size / Margin:</span>
-                        <span class="font-bold text-white text-sm" id="setupSize">$1,045.00 <span class="text-xs text-accentBlue font-normal">(10x Leverage)</span></span>
-                    </div>
-                    <div class="text-right">
-                        <span class="text-gray-400 block">Est. Profit (TP):</span>
-                        <span class="font-bold text-accentGreen text-sm" id="setupProfit">+$87.20</span>
-                    </div>
-                </div>
-
-                <!-- Execution Button -->
-                <button onclick="executeTrade()" class="w-full bg-gradient-to-r from-accentGreen to-emerald-500 hover:from-emerald-400 hover:to-emerald-600 text-darkBg font-bold py-2.5 rounded-xl text-sm transition-all shadow-lg shadow-emerald-500/20 flex items-center justify-center space-x-2">
-                    <i class="fa-solid fa-bolt"></i>
-                    <span>Execute Trade via TG Bot</span>
-                </button>
-            </div>
-
-        </div>
+      </div>
+      <div class="flex items-center gap-3 text-xs text-slate-400">
+        <span class="hidden sm:inline">Powered by CoinGecko + local TA</span>
+        <span id="statusDot" class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+      </div>
     </div>
+  </header>
 
-    <!-- JavaScript Engine -->
-    <script>
-        let currentTimeframe = '1h';
+  <main class="max-w-7xl mx-auto px-4 py-6 space-y-6">
+    <!-- Control Panel -->
+    <section class="glass rounded-2xl p-5 glow">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+        <!-- Token Search -->
+        <div class="lg:col-span-4 space-y-2">
+          <label class="text-xs font-medium text-slate-400 uppercase tracking-wider">Token / Coin</label>
+          <div class="relative">
+            <input id="tokenInput" type="text" placeholder="BTC, ETH, SOL, pepe..." 
+              class="w-full bg-slate-900/80 border border-slate-700 rounded-xl px-4 py-3 text-sm text-white placeholder-slate-500 focus:outline-none input-glow transition"
+              autocomplete="off" />
+            <div id="searchResults" class="absolute z-20 top-full left-0 right-0 mt-1 bg-slate-900 border border-slate-700 rounded-xl shadow-xl max-h-60 overflow-y-auto hidden"></div>
+          </div>
+          <p class="text-[11px] text-slate-500">Type symbol or name • selects CoinGecko ID</p>
+        </div>
 
-        function setTimeframe(tf) {
-            currentTimeframe = tf;
-            document.querySelectorAll('.tf-btn').forEach(btn => {
-                btn.classList.remove('bg-accentBlue', 'text-white', 'shadow');
-                btn.classList.add('text-gray-400');
-            });
-            document.getElementById(`tf-${tf}`).classList.add('bg-accentBlue', 'text-white', 'shadow');
-            document.getElementById(`tf-${tf}`).classList.remove('text-gray-400');
-            
-            // Trigger pseudo refresh or re-analysis based on timeframe
-            runAnalysis();
-        }
-
-        function runAnalysis() {
-            const query = document.getElementById('tokenInput').value.trim().toUpperCase() || 'SOL';
-            
-            // Mock data variation based on input token to simulate realistic comprehensive analyzer backend
-            const tokenData = {
-                'SOL': { name: 'Solana Network', price: '$142.50', change: '+6.45%', signal: 'STRONG BUY', tech: 'RSI(14): 58.2. MACD Bullish crossover confirmed on ' + currentTimeframe + '. Breakout imminent.', fund: 'MCap: $66B. Liq locked. Holder concentration healthy.', news: 'Spike in Twitter volume (+140%). High institutional dex aggregation.', entry: '$142.10', sl: '$137.50 (-3.2%)', tp: '$154.00 (+8.3%)', size: '$1,045.00 (10x)', profit: '+$87.20' },
-                'BTC': { name: 'Bitcoin', price: '$67,400.00', change: '+2.10%', signal: 'BUY', tech: 'RSI(14): 61.4. Consolidation above key macro pivot on ' + currentTimeframe + '.', fund: 'ETF inflows positive for 4 consecutive days. Exchange reserves dropping.', news: 'Macro liquidity shifting favorably. Options expiry favoring bulls.', entry: '$67,100', sl: '$65,800 (-1.9%)', tp: '$70,500 (+5.0%)', size: '$2,090.00 (5x)', profit: '+$104.50' },
-                'PEPE': { name: 'Pepe Coin', price: '$0.0000124', change: '+14.20%', signal: 'DYN SCALP', tech: 'RSI(14): 74.5 (Overbought, high momentum on ' + currentTimeframe + ').', fund: 'High volume surge ($1.2B 24h). Whale accumulation detected.', news: 'Trending #1 globally on X/Twitter. Community raid ongoing.', entry: '$0.0000122', sl: '$0.0000110 (-9.8%)', tp: '$0.0000155 (+27%)', size: '$522.50 (5x)', profit: '+$141.00' }
-            };
-
-            const data = tokenData[query] || {
-                name: query + ' Token',
-                price: '$1.45',
-                change: '+8.3%',
-                signal: 'ACCUMULATE',
-                tech: 'RSI neutral at 50.1. Moving averages trending upward on ' + currentTimeframe + '.',
-                fund: 'Contract verified, tax 0/0, liquidity pool locked for 365 days.',
-                news: 'Positive sentiment across Telegram channels and DEX scanners.',
-                entry: '$1.42',
-                sl: '$1.35 (-4.9%)',
-                tp: '$1.75 (+23.2%)',
-                size: '$522.50 (5x)',
-                profit: '+$121.00'
-            };
-
-            // Update UI elements
-            document.getElementById('tokenSymbol').innerText = query + '/USDT';
-            document.getElementById('tokenName').innerText = data.name;
-            document.getElementById('tokenPrice').innerText = data.price;
-            document.getElementById('tokenChange').innerText = data.change + ' (' + currentTimeframe + ')';
-            document.getElementById('tokenSignal').innerText = data.signal;
-            document.getElementById('techText').innerText = data.tech;
-            document.getElementById('fundText').innerText = data.fund;
-            document.getElementById('newsText').innerText = data.news;
-            document.getElementById('setupEntry').innerText = data.entry;
-            document.getElementById('setupSL').innerText = data.sl;
-            document.getElementById('setupTP').innerText = data.tp;
-            document.getElementById('setupSize').innerText = data.size;
-            document.getElementById('setupProfit').innerText = data.profit;
-        }
-
-        function executeTrade() {
-            alert('🚀 Order broadcasted to Telegram Bot backend! Trade successfully executed based on portfolio risk parameters.');
-        }
-    </script>
-</body>
-</html>
-at(data.lastPrice),
-                        volume_24h: parseFloat(data.quoteVolume),
-                        change_24h: parseFloat(data.priceChangePercent),
-                        high_24h: parseFloat(data.highPrice),
-                        metricLabel: "24h High",
-                        metricVal: `$${Number(data.highPrice).toLocaleString()}`,
-                        venue: "CEX Futures (Binance)"
-                    };
-                }
-            } catch (e) {
-                console.log("CEX lookup failed, trying DEX network");
-            }
-
-            // 2. Fallback to DexScreener if CEX lookup didn't match
-            if (!marketData) {
-                isPerp = false;
-                leverage = 1; // Spot token defaults to 1x
-                try {
-                    let res = await fetch(`https://api.dexscreener.com/latest/dex/search?q=${encodeURIComponent(query)}`);
-                    if (res.ok) {
-                        let data = await res.json();
-                        let pairs = data.pairs || [];
-                        if (pairs.length > 0) {
-                            let best = pairs.reduce((prev, curr) => (parseFloat(curr.liquidity?.usd || 0) > parseFloat(prev.liquidity?.usd || 0)) ? curr : prev);
-                            marketData = {
-                                type: "DEX",
-                                symbol: best.baseToken.symbol,
-                                name: best.baseToken.name,
-                                price: parseFloat(best.priceUsd || 0),
-                                volume_24h: parseFloat(best.volume?.h24 || 0),
-                                change_24h: parseFloat(best.priceChange?.h24 || 0),
-                                liquidity: parseFloat(best.liquidity?.usd || 0),
-                                metricLabel: "Liquidity Pool",
-                                metricVal: `$${Number(best.liquidity?.usd || 0).toLocaleString()}`,
-                                venue: `DEX (${(best.dexId || 'dex').toUpperCase()})`
-                            };
-                        }
-                    }
-                } catch (e) {
-                    console.log("DEX lookup error", e);
-                }
-            }
-
-            document.getElementById('loading').classList.add('hidden');
-
-            if (!marketData || !marketData.price) {
-                alert(`Could not find market data for '${query}' on CEX or DEX networks.`);
-                return;
-            }
-
-            let price = marketData.price;
-
-            // Timeframe volatility buffer configuration
-            let tfMultipliers = { '15m': 0.015, '1h': 0.03, '4h': 0.06, '1d': 0.12 };
-            let baseBuffer = tfMultipliers[timeframe] || 0.03;
-            if (!isPerp) baseBuffer *= 1.3; // Give memecoins/DEX tokens more breathing room
-
-            let entry = price;
-            let stopLoss = Number((entry * (1 - baseBuffer)).toFixed(6));
-            let tp1 = Number((entry * (1 + (baseBuffer * 1.5))).toFixed(6));
-            let tp2 = Number((entry * (1 + (baseBuffer * 3.0))).toFixed(6));
-            let tp3 = Number((entry * (1 + (baseBuffer * 5.0))).toFixed(6));
-
-            // Risk & Position Sizing Formulas
-            let riskAmount = portfolio * (riskPct / 100.0);
-            let priceRisk = Math.abs(entry - stopLoss);
-            let positionTokens = priceRisk > 0 ? riskAmount / priceRisk : 0;
-            let notionalValue = positionTokens * entry;
-            let requiredMargin = isPerp ? notionalValue / leverage : notionalValue;
-
-            // Update UI Elements
-            document.getElementById('res-symbol').innerText = marketData.name ? `${marketData.symbol} (${marketData.name})` : marketData.symbol;
-            document.getElementById('res-venue').innerText = marketData.venue;
-            document.getElementById('res-price').innerText = `$${price.toLocaleString(undefined, {minimumFractionDigits: price < 1 ? 4 : 2, maximumFractionDigits: price < 1 ? 6 : 2})}`;
-            
-            let changeEl = document.getElementById('res-change');
-            let changeVal = marketData.change_24h || 0;
-            changeEl.innerText = `${changeVal >= 0 ? '+' : ''}${changeVal.toFixed(2)}%`;
-            changeEl.className = `text-xs font-semibold ${changeVal >= 0 ? 'text-emerald-400' : 'text-rose-400'}`;
-
-            document.getElementById('res-vol').innerText = `$${Math.round(marketData.volume_24h).toLocaleString()}`;
-            document.getElementById('res-metric-container').innerHTML = `${marketData.metricLabel}: <span class="font-mono font-bold text-white">${marketData.metricVal}</span>`;
-            
-            document.getElementById('lbl-tf').innerText = timeframe;
-            document.getElementById('lbl-risk').innerText = riskPct;
-
-            document.getElementById('setup-entry').innerText = `$${entry.toLocaleString()}`;
-            document.getElementById('setup-sl').innerText = `$${stopLoss.toLocaleString()}`;
-            document.getElementById('setup-tp1').innerText = `$${tp1.toLocaleString()}`;
-            document.getElementById('setup-tp2').innerText = `$${tp2.toLocaleString()}`;
-            document.getElementById('setup-tp3').innerText = `$${tp3.toLocaleString()}`;
-
-            document.getElementById('risk-usd').innerText = `$${riskAmount.toFixed(2)}`;
-            document.getElementById('risk-tokens').innerText = `${positionTokens.toFixed(4)} ${marketData.symbol}`;
-            document.getElementById('risk-notional').innerText = `$${notionalValue.toFixed(2)}`;
-            document.getElementById('risk-margin').innerText = `$${requiredMargin.toFixed(2)} ${isPerp ? '(' + leverage + 'x)' : '(Spot)'}`;
-
-            document.getElementById('results').classList.remove('hidden');
-
-            // Generate Markdown string for Telegram report sharing
-            lastReportText = `🚀 *INSTITUTIONAL TRADE SETUP: ${marketData.symbol}*
-🌐 *Venue:* \`${marketData.venue}\` | ⏱️ *Timeframe:* \`${timeframe.toUpperCase()}\`
-💵 *Current Price:* \`${price}\`
-
-📊 *Market Health:*
-• *24h Volume:* \`$${Math.round(marketData.volume_24h).toLocaleString()}\`
-• *24h Change:* \`${changeVal}%\`
-
-🎯 *Optimized Execution Plan:*
-• *Direction:* \`LONG / BUY\`
-• *Entry Zone:* \`${entry}\`
-• *Stop Loss:* \`${stopLoss}\` 🛑
-• *Take Profit 1:* \`${tp1}\` (1:1.5 R:R)
-• *Take Profit 2:* \`${tp2}\` (1:3.0 R:R)
-• *Take Profit 3:* \`${tp3}\` (1:5.0 R:R)
-
-⚖️ *Portfolio Risk Sizing ($${portfolio.toLocaleString()} Portfolio):*
-• *Target Risk (${riskPct}%):* \`$${riskAmount.toFixed(2)}\`
-• *Position Size:* \`${positionTokens.toFixed(4)}${marketData.symbol}\`
-• *Notional Value:* \`$${notionalValue.toFixed(2)}\`
-• *Required Margin:* \`$${requiredMargin.toFixed(2)}${isPerp ? '(' + leverage + 'x)' : '(Spot)'}\`
-
-🤖 *Generated via AlphaTerminal Pro Engine*`;
-        }
-
-        async function copyTelegramReport() {
-            if (!lastReportText) return;
-            try {
-                await navigator.clipboard.writeText(lastReportText);
-                alert('✅ Setup copied to clipboard! You can now paste it directly into your Telegram channel.');
-            } catch (err) {
-                alert('Failed to copy text automatically.');
-            }
-        }
-    </script>
-</body>
-</html>
-          document.getElementById('res-symbol').innerText = marketData.name ? `${marketData.symbol} (${marketData.name})` : marketData.symbol;
-            document.getElementById('res-venue').innerText = marketData.venue;
-            document.getElementById('res-price').innerText = `$${price.toLocaleString(undefined, {minimumFractionDigits: price < 1 ? 4 : 2, maximumFractionDigits: price < 1 ? 6 : 2})}`;
-            
-            let changeEl = document.getElementById('res-change');
-            let changeVal = marketData.change_24h || 0;
-            changeEl.innerText = `${changeVal >= 0 ? '+' : ''}${changeVal.toFixed(2)}%`;
-            changeEl.className = `text-xs font-semibold ${changeVal >= 0 ? 'text-emerald-400' : 'text-rose-400'}`;
-
-            document.getElementById('res-vol').innerText = `$${Math.round(marketData.volume_24h).toLocaleString()}`;
-            document.getElementById('res-metric-container').innerHTML = `${marketData.metricLabel}: <span class="font-mono font-bold text-white">${marketData.metricVal}</span>`;
-
-            document.getElementById('setup-entry').innerText = `$${entry.toLocaleString()}`;
-            document.getElementById('setup-sl').innerText = `$${stopLoss.toLocaleString()}`;
-            document.getElementById('setup-tp1').innerText = `$${tp1.toLocaleString()}`;
-            document.getElementById('setup-tp2').innerText = `$${tp2.toLocaleString()}`;
-
-            document.getElementById('risk-usd').innerText = `$${riskAmount.toFixed(2)}`;
-            document.getElementById('risk-tokens').innerText = `${positionTokens.toFixed(4)} ${marketData.symbol}`;
-            document.getElementById('risk-notional').innerText = `$${notionalValue.toFixed(2)}`;
-            document.getElementById('risk-margin').innerText = `$${requiredMargin.toFixed(2)} (${leverage}x)`;
-
-            document.getElementById('results').classList.remove('hidden');
-        }
-    </script>
-</body>
-  </html>
-                                                                                                                                                  
+        <!-- Portfolio -->
+        <d
+... 
